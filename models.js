@@ -1,32 +1,37 @@
 // models.js
-import Database from "better-sqlite3";
+import sqlite3 from "sqlite3";
+import { open } from "sqlite";
 import fs from "fs-extra";
 
 const DB_PATH = process.env.DB_PATH || "./db.sqlite";
 await fs.ensureFile(DB_PATH);
 
-const db = new Database(DB_PATH);
+// sqlite3 ni promise asosida ishlatish
+const db = await open({
+  filename: DB_PATH,
+  driver: sqlite3.Database,
+});
 
 // users: id = telegram user id
-db.prepare(`
+await db.exec(`
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY,
   username TEXT,
   balance INTEGER DEFAULT 0,
   secret_code TEXT
 );
-`).run();
+`);
 
 // providers: ColdBet, boshqalar
-db.prepare(`
+await db.exec(`
 CREATE TABLE IF NOT EXISTS providers (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL
 );
-`).run();
+`);
 
 // requests: deposit/withdraw requests
-db.prepare(`
+await db.exec(`
 CREATE TABLE IF NOT EXISTS requests (
   id TEXT PRIMARY KEY,
   user_id INTEGER,
@@ -41,6 +46,6 @@ CREATE TABLE IF NOT EXISTS requests (
   resolved_at TEXT,
   admin_note TEXT
 );
-`).run();
+`);
 
 export default db;
